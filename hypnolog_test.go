@@ -1,6 +1,7 @@
 package hypnolog
 
 import (
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -16,7 +17,7 @@ func TestHypnoLogString(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			HypnoLogString(tt.args.data)
+			LogString(tt.args.data)
 		})
 	}
 }
@@ -29,12 +30,12 @@ func TestHypnoLogStruct(t *testing.T) {
 		name string
 		args args
 	}{
-		{name: "testWithString", args: args{data: "test data"}},
+		{name: "testWithString", args: args{data: "test string data"}},
 		{name: "testWithCustomStruct", args: args{data: MyTestStruct{ParamA:"papapa", ParamB:43}}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			HypnoLogStruct(tt.args.data)
+			LogStruct(tt.args.data)
 		})
 	}
 }
@@ -42,4 +43,18 @@ func TestHypnoLogStruct(t *testing.T) {
 type MyTestStruct struct {
 	ParamA string
 	ParamB int
+}
+
+
+func TestSetHost(t *testing.T) {
+
+	SetHost("not-existing-host")
+	res := LogString("aaad")
+
+	assert.Equal(t, false, res)
+
+
+	SetHost("localhost")
+	res = LogString("aaad")
+	assert.Equal(t, true, res)
 }

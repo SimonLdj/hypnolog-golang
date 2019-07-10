@@ -3,55 +3,63 @@ package hypnolog
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 )
 
 const (
 	defaltDomain = "localhost"
-	//defaltDomain = "host.docker.internal"
 	defaultPort = "7000"
 )
 
-func HypnoLogStruct(data interface{}) {
-	jsonStr, _ := json.Marshal(data)
-	HypnoLog(string(jsonStr), "json")
+var (
+	host  = defaltDomain
+)
+
+func SetHost(newHost string) {
+	host = newHost
 }
 
-func HypnoLogString(str string) {
-	HypnoLog(str, "string")
+func LogStruct(data interface{}) bool {
+	return Log(HypnologMessage{Data: data, Type: "json"})
 }
 
+func LogString(str string) bool{
+	return Log(HypnologMessage{Data: str, Type: "string"})
+}
 
-func HypnoLog(data string, typeName string) {
-	url := "http://"+defaltDomain+":"+defaultPort+"/logger/in"
-	//fmt.Println("URL:>", url)
+func Log(message HypnologMessage) bool {
 
-	msg := HypnologMessage{
-		Data: data,
-		Type: typeName,
+	//fmt.Println("URL:>", postUrl)
+	postUrl := "http://" + host + ":" + defaultPort + "/logger/in"
+
+	b := new(bytes.Buffer)
+	err := json.NewEncoder(b).Encode(message)
+	if err != nil {
+		fmt.Println("Hypnolog error, while serializing json request: ", err)
+		return false
 	}
-
-	jsonStr, _ := json.Marshal(msg)
-
-	//var jsonStr = []byte(`{"type":"json", "data":"Buy cheese and bread for breakfast."}`)
-	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, _ := client.Do(req)
-	//if err != nil {
-	//panic(err)
-	//}
-	defer resp.Body.Close()
+	resp , err := http.Post(postUrl, "application/json; charset=utf-8", b)
+	if err != nil {
+		fmt.Println("Hypnolog error, while sending http request: ", err)
+		return false
+	}
 
 	//fmt.Println("response Status:", resp.Status)
 	//fmt.Println("response Headers:", resp.Header)
 	//body, _ := ioutil.ReadAll(resp.Body)
 	//fmt.Println("response Body:", string(body))
+
+	if resp.StatusCode != 200 {
+		fmt.Println("Hypnolog error, unexpected status code from server: ", resp.StatusCode)
+		return false
+
+	}
+	return true
 }
 
 type HypnologMessage struct {
-	Data string   `json:"data"`
-	Type string   `json:"type"`
-	Tags []string `json:"tags"`
+	Data interface{} `json:"data"`
+	Type string      `json:"type"`
+	Tags []string    `json:"tags"`
 }
