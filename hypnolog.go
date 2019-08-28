@@ -20,21 +20,31 @@ func SetHost(newHost string) {
 	host = newHost
 }
 
+func Create() Message {
+	return Message{}
+}
+
+func Tag(tagName string) Message {
+	return Message{ Tags: []string{tagName}}
+}
+
+// todo: consider to remove
 func LogStruct(data interface{}) bool {
-	return Log(HypnologMessage{Data: data, Type: "json"})
+	return Create().Set(data).Log()
 }
 
+// todo: consider to remove
 func LogString(str string) bool{
-	return Log(HypnologMessage{Data: str, Type: "string"})
+	return Create().Str(str).Log()
 }
 
-func Log(message HypnologMessage) bool {
+func Log(message Message) bool {
 
-	//fmt.Println("URL:>", postUrl)
 	postUrl := "http://" + host + ":" + defaultPort + "/logger/in"
 
 	b := new(bytes.Buffer)
 	err := json.NewEncoder(b).Encode(message)
+
 	if err != nil {
 		fmt.Println("Hypnolog error, while serializing json request: ", err)
 		return false
@@ -45,11 +55,6 @@ func Log(message HypnologMessage) bool {
 		return false
 	}
 
-	//fmt.Println("response Status:", resp.Status)
-	//fmt.Println("response Headers:", resp.Header)
-	//body, _ := ioutil.ReadAll(resp.Body)
-	//fmt.Println("response Body:", string(body))
-
 	if resp.StatusCode != 200 {
 		fmt.Println("Hypnolog error, unexpected status code from server: ", resp.StatusCode)
 		return false
@@ -58,8 +63,29 @@ func Log(message HypnologMessage) bool {
 	return true
 }
 
-type HypnologMessage struct {
+type Message struct {
 	Data interface{} `json:"data"`
 	Type string      `json:"type"`
 	Tags []string    `json:"tags"`
+}
+
+func (message Message) Tag(tagName string) Message {
+	message.Tags = append(message.Tags, tagName)
+	return message
+}
+
+func (message Message) Str(str string) Message {
+	message.Data = str
+	message.Type = "string"
+	return message
+}
+
+func (message Message) Set(data interface{}) Message {
+	message.Data = data
+	message.Type = "json"
+	return message
+}
+
+func (message Message) Log() bool {
+	return Log(message)
 }

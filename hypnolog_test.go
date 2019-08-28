@@ -1,9 +1,21 @@
 package hypnolog
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
+
+func Test_General(t *testing.T) {
+	res := false
+
+	res = Create().Str("some string").Tag("test-example").Log()
+	assert.True(t, res)
+	res = Create().Set(struct{ValueA string; ValueB int}{"Hello", 77,}).Tag("test-example").Log()
+	assert.True(t, res)
+	res = Create().Set(map[string]string{"some-key":"some-value"}).Log()
+	assert.True(t, res)
+}
 
 func TestHypnoLogString(t *testing.T) {
 	type args struct {
@@ -31,7 +43,7 @@ func TestHypnoLogStruct(t *testing.T) {
 		args args
 	}{
 		{name: "testWithString", args: args{data: "test string data"}},
-		{name: "testWithCustomStruct", args: args{data: MyTestStruct{ParamA:"papapa", ParamB:43}}},
+		{name: "testWithCustomStruct", args: args{data: MyTestStruct{ParamA: "papapa", ParamB: 43}}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -45,7 +57,6 @@ type MyTestStruct struct {
 	ParamB int
 }
 
-
 func TestSetHost(t *testing.T) {
 
 	SetHost("not-existing-host")
@@ -53,8 +64,8 @@ func TestSetHost(t *testing.T) {
 
 	assert.Equal(t, false, res)
 
-
 	SetHost("localhost")
 	res = LogString("aaad")
 	assert.Equal(t, true, res)
 }
+
