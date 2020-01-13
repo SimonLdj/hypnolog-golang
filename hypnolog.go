@@ -75,7 +75,11 @@ func (message Message) Tag(tagName string) Message {
 }
 
 func (message Message) Str(str string) Message {
-	message.Data = str
+	if message.Data == nil {
+		message.Data = str
+	} else {
+		message.Data = fmt.Sprintln(message.Data) + str
+	}
 	message.Type = "string"
 	return message
 }
